@@ -36,10 +36,10 @@ Evicts the page that **won't be used for the longest time in the future**. This 
 ## 🖼️ Visual Output
 
 **Page Fault Comparison (Total Faults per Algorithm)**
-![Page Fault Comparison](img/page_fault_comparison.jpeg)
+![Page Fault Comparison](img/page_fault_comparison.jpg)
 
 **Page Fault Trace (Cumulative Faults Over Time)**
-![Page Fault Trace](img/page_fault_trace.jpeg)
+![Page Fault Trace](img/page_fault_trace.jpg)
 
 The trace chart shows *how* faults accumulate step-by-step — Optimal consistently faults the least, while FIFO and LRU diverge based on access patterns.
 
