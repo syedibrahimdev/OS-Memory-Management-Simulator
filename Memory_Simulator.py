@@ -122,15 +122,79 @@ def plot_page_faults(faults):
     plt.tight_layout()
     plt.show()
 
-# Main Menu
+# Cumulative Page Fault Trace (shows fault behavior over time, not just totals)
+def plot_fault_trace(page_refs, num_frames):
+    def trace_fifo(refs, frames):
+        memory, memory_set, faults, trace = deque(), set(), 0, []
+        for page in refs:
+            if page not in memory_set:
+                faults += 1
+                if len(memory) == frames:
+                    memory_set.remove(memory.popleft())
+                memory.append(page)
+                memory_set.add(page)
+            trace.append(faults)
+        return trace
+
+    def trace_lru(refs, frames):
+        memory, last_used, faults, time, trace = [], {}, 0, 0, []
+        for page in refs:
+            time += 1
+            if page not in memory:
+                faults += 1
+                if len(memory) < frames:
+                    memory.append(page)
+                else:
+                    lru_page = min(memory, key=lambda p: last_used[p])
+                    memory.remove(lru_page)
+                    memory.append(page)
+            last_used[page] = time
+            trace.append(faults)
+        return trace
+
+    def trace_optimal(refs, frames):
+        memory, faults, trace = [], 0, []
+        for i in range(len(refs)):
+            page = refs[i]
+            if page not in memory:
+                faults += 1
+                if len(memory) < frames:
+                    memory.append(page)
+                else:
+                    future = refs[i+1:]
+                    indices = [future.index(m) if m in future else float('inf') for m in memory]
+                    memory[indices.index(max(indices))] = page
+            trace.append(faults)
+        return trace
+
+    fifo_trace = trace_fifo(page_refs, num_frames)
+    lru_trace = trace_lru(page_refs, num_frames)
+    optimal_trace = trace_optimal(page_refs, num_frames)
+
+    x = list(range(1, len(page_refs) + 1))
+    plt.figure(figsize=(9, 6))
+    plt.plot(x, fifo_trace, marker='o', label='FIFO', color='red')
+    plt.plot(x, lru_trace, marker='s', label='LRU', color='orange')
+    plt.plot(x, optimal_trace, marker='^', label='Optimal', color='green')
+
+    plt.title('Cumulative Page Faults Over Time', fontsize=14)
+    plt.xlabel('Page Reference Step')
+    plt.ylabel('Cumulative Page Faults')
+    plt.xticks(x)
+    plt.legend()
+    plt.grid(linestyle='--', alpha=0.6)
+    plt.tight_layout()
+    plt.show()
+
 def main():
     while True:
         print("\n=== Memory Management Simulator ===")
         print("1. Simulate Paging")
         print("2. Simulate Segmentation")
         print("3. Simulate Paged Segmentation")
-        print("4. Graph Page Faults")
-        print("5. Exit")
+        print("4. Graph Page Faults (Bar Comparison)")
+        print("5. Graph Page Fault Trace (Over Time)")
+        print("6. Exit")
         choice = input("Enter choice: ")
 
         if choice == '1':
@@ -182,7 +246,14 @@ def main():
             }
             plot_page_faults(results)
 
+
         elif choice == '5':
+            page_refs = [1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5]
+            num_frames = 4
+            plot_fault_trace(page_refs, num_frames)
+
+
+        elif choice == '6':
             print("Exiting simulator.")
             break
 
